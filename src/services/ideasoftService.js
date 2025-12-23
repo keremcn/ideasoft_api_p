@@ -97,31 +97,31 @@ export const bulkCreateProducts = async (products, accessToken, shopId, onProgre
  */
 export const getAccessToken = async (clientId, clientSecret) => {
   try {
-    // API route üzerinden token al (CORS sorununu önlemek için)
-    const API_BASE = import.meta.env.DEV 
-      ? 'http://localhost:3000/api' 
-      : (import.meta.env.VITE_API_BASE || '/api')
-
+    // Ideasoft API'ye doğrudan istek at
     const response = await axios.post(
-      `${API_BASE}/get-token`,
+      'https://api.ideasoft.com.tr/oauth/token',
       {
-        clientId,
-        clientSecret
+        grant_type: 'client_credentials',
+        client_id: clientId,
+        client_secret: clientSecret
       },
       {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       }
     )
 
-    if (response.data.success) {
+    if (response.data && response.data.access_token) {
       return response.data.access_token
     } else {
-      throw new Error(response.data.error || 'Token alınamadı')
+      throw new Error('Token alınamadı: Geçersiz yanıt')
     }
   } catch (error) {
-    const errorMessage = error.response?.data?.error || 
+    const errorMessage = error.response?.data?.error_description || 
+                        error.response?.data?.error || 
+                        error.response?.data?.message ||
                         error.message || 
                         'Token alınamadı'
     throw new Error(errorMessage)
